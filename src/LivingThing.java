@@ -46,7 +46,7 @@ public class LivingThing {
     }
 
     public boolean isDead(){
-        return health <= 0;
+        return getHealth() <= 0;
     }
 
     public String getPieceColor() {
@@ -56,4 +56,6 @@ public class LivingThing {
     public void setPieceColor(String pieceColor) {
         this.pieceColor = pieceColor;
     }
+
+
 }

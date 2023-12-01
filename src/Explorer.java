@@ -7,6 +7,9 @@ public class Explorer extends LivingThing{
     public Explorer(String name, int health) {
         super(name, health);
     }
+
+
+
     public void addTreasure(Treasure treasure){
         treasures.add(treasure);
     }

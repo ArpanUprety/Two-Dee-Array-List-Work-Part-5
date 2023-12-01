@@ -11,6 +11,12 @@ public class Treasure {
         value = 500;
         description = "Gold";
     }
+    
+    public int bounty(){
+      return  value = 10;
+
+    }
+
 
     public String getConsoleStr(){
         return ConsoleColors.YELLOW + String.valueOf(description.charAt(0)).toUpperCase() + ConsoleColors.RESET + " ";

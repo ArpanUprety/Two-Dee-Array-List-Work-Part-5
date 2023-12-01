@@ -19,4 +19,9 @@ public class Monster extends LivingThing implements Fighter{
         livingThing.setHealth(livingThing.getHealth() - damage);
 return damage;
     }
+
+    @Override
+    public void setHealth() {
+
+    }
 }

@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class board {
+    public int enemiesDefeated = 0;
+    public int bounty = (enemiesDefeated * 10);
+
     //Update board to have two integer variables (gazooRow and gazooCol) that contain the current location of gazoo.
     private final ArrayList<ArrayList<Space>> board;
     private ArrayList<Treasure> remainingTreasures;
@@ -13,25 +16,50 @@ public class board {
     private int gazooRow = 0;
     private int gazooCol = 0;
 
-    public board(int columns, int rows){
+    public board(int columns, int rows, Explorer e){
         this.rows = columns;
         this.columns = rows;
 
-        Gazoo = new Explorer("Gazoo", 20, ConsoleColors.GREEN);
+        Gazoo = e;
         board = new ArrayList<ArrayList<Space>>(rows);
         BuildBoard();
         CreateEntities();
     }
 
     public board(){
-        columns = 4;
-        rows = 4;
+        this(8, 10, new Hero("Gazee", 45, ConsoleColors.GREEN));
 
-        Gazoo = new Explorer("Gazoo", 20, ConsoleColors.GREEN);
-        board = new ArrayList<ArrayList<Space>>(rows);
-        BuildBoard();
-        CreateEntities();
     }
+
+    public Fighter Fight(Fighter f1, Fighter f2){
+        LivingThing F1 = (LivingThing) f1;
+        LivingThing F2 = (LivingThing) f2;
+
+        ((LivingThing) F1).setPieceColor(ConsoleColors.GREEN);
+        ((LivingThing) F2).setPieceColor(ConsoleColors.RED);
+        while (!f1.isDead() && !f2.isDead()){
+
+            System.out.println( F2.getPieceColor() +  F2.getName() + ConsoleColors.RESET+  " applies " +  f2.Hurt((LivingThing) f1) + " damage to " + F1.getPieceColor() + ((LivingThing) f1).getName() + ConsoleColors.RESET );
+            System.out.println(((LivingThing) f1).getName() + " has " + f1.getHealth() + " health remaining");
+            Utilities.pause(500);
+            if (f1.isDead()){
+                System.out.println( F2.getPieceColor() +  F2.getName() + ConsoleColors.RESET +  " has defeated " + F1.getPieceColor() +  F1.getName() + ConsoleColors.RESET);
+                return f2;
+            } else {
+                System.out.println(F1.getPieceColor() + F1.getName() + ConsoleColors.RESET + " applies " + f1.Hurt((LivingThing) f2) + " damage to " + F2.getPieceColor() +  ((LivingThing) f2).getName() + ConsoleColors.RESET );
+                System.out.println(((LivingThing) f2).getName() + " has " + f2.getHealth() + " health remaining");
+            }
+            Utilities.pause(500);
+if (f2.isDead()){
+    System.out.println( F1.getPieceColor() +  F1.getName() + ConsoleColors.RESET +  " has defeated " + F2.getPieceColor() +  F2.getName() + ConsoleColors.RESET);
+    return f1;
+}
+
+        }
+        return null;
+    }
+
+
 
     public void CreateEntities(){
         createFiveTreasures();
@@ -124,9 +152,11 @@ public class board {
         } else if (character == 'r') {
             printBoard(true);
             return true;
-        } else if (character == 'i') {
-            System.out.printf("%s has collected (%d/%d) treasures with a total value of %s.\n",Gazoo.getName(), collectedTreasureCount(), totalTreasuresCount(), Gazoo.getTreasureValue());
+        } else if (character == 'i' && Gazoo instanceof Hero) {
+            System.out.printf("%s has collected (%d/%d) treasures and claimed %s bounties with a total  value of %s gold.\n",Gazoo.getName(), collectedTreasureCount(), totalTreasuresCount(), enemiesDefeated, (Gazoo.getTreasureValue() + bounty));
             return true;
+        }else if (character == 'i' && Gazoo instanceof Explorer && !(Gazoo instanceof Hero) ){
+            System.out.printf("%s has collected (%d/%d) treasures with a total  value of %s gold.\n",Gazoo.getName(), collectedTreasureCount(), totalTreasuresCount(), (Gazoo.getTreasureValue()  ));
         }
 
         System.out.println(ConsoleColors.RED + "Illegal Input.\n" + ConsoleColors.RESET);
@@ -141,9 +171,12 @@ public class board {
     }
 
     public boolean checkForDeath(){
-        if(Gazoo.isDead()){
+        if(Gazoo.isDead() && Gazoo instanceof Explorer && !(Gazoo instanceof Hero)){
             System.out.println(ConsoleColors.RED + "Gazoo DIED. You lose!" + ConsoleColors.RESET);
             System.out.printf("%s collected (%d/%d) treasures with a total value of %s.\n",Gazoo.getName(), collectedTreasureCount(), totalTreasuresCount(), Gazoo.getTreasureValue());
+            return true;
+        }else if (Gazoo.isDead() && Gazoo instanceof Hero){
+            System.out.printf("%s has collected (%d/%d) treasures and claimed %s bounties with a total  value of %s gold.\n",Gazoo.getName(), collectedTreasureCount(), totalTreasuresCount(), enemiesDefeated, (Gazoo.getTreasureValue() + bounty));
             return true;
         }
         return false;
@@ -160,10 +193,12 @@ public class board {
         return collectedTreasureCount() + remainingTreasureCount();
     }
     public boolean checkForWin(){
-        if (remainingTreasures.isEmpty()){
+        if (remainingTreasures.isEmpty() && Gazoo instanceof Explorer){
             System.out.println(ConsoleColors.YELLOW + "Gazoo collected all the treasure. You win!");
             return true;
         }
+            
+
         return false;
     }
 
@@ -178,20 +213,49 @@ public class board {
         if (isSpaceValid(newGazooCol, newGazooRow)){
             Space space = board.get(gazooRow).get(gazooCol);
             LivingThing occupant = space.getOccupant();
-
+            boolean allowMove = true;
             Space destinationSpace = board.get(newGazooRow).get(newGazooCol);
             LivingThing destinationOccupant = destinationSpace.getOccupant();
             Treasure destinationCache = destinationSpace.getCache();
 
-                if (destinationOccupant instanceof Monster){
+                if (destinationOccupant instanceof Monster && (!(Gazoo instanceof Hero)) ){
                     Monster m = (Monster) destinationOccupant;
                     m.Hurt(Gazoo);
                     System.out.println(ConsoleColors.RED + Gazoo.getName() + " was attacked by " + m.getName() + " for a loss of " + m.getDamage() + " damage. " + Gazoo.getName() + " has " + Gazoo.getHealth() + " health left." + ConsoleColors.RESET);
+                    allowMove = false;
+                }else if (destinationOccupant instanceof Monster && Gazoo instanceof Hero){
+
+                    if ( Fight((Fighter) Gazoo, (Fighter) destinationOccupant) == Gazoo){
+                        allowMove = true;
+                        System.out.println(Gazoo.getName() + " has collected " + destinationOccupant.getName() + "'s bounty of 10 gold");
+                        enemiesDefeated += 1;
+                        bounty +=10;
+
+                    }else {
+                        allowMove = false;
+                        isGameOver();
+                    }
                 }
-                if (destinationOccupant instanceof Healer){
+                if (destinationOccupant instanceof Healer && Gazoo instanceof Explorer && !(Gazoo instanceof Hero)){
                     Healer h = (Healer) destinationOccupant;
                     h.Heal(Gazoo);
                     System.out.println(ConsoleColors.BLUE + Gazoo.getName() + " was healed by " + h.getName() + " for an increase of " + h.getHealValue() + " health. " + Gazoo.getName() + " has " + Gazoo.getHealth() + " health left." + ConsoleColors.RESET);
+                }else if (destinationOccupant instanceof Healer && Gazoo instanceof Hero){
+                    Healer h = (Healer) destinationOccupant;
+                    h.Heal(Gazoo);
+                    System.out.println(ConsoleColors.BLUE + Gazoo.getName() + " was healed by " + h.getName() + " for an increase of " + h.getHealValue() + " health. " + Gazoo.getName() + " has " + Gazoo.getHealth() + " health left." + ConsoleColors.RESET);
+
+                    boolean placed = false;
+                    while (!placed){
+                        int randRow = ThreadLocalRandom.current().nextInt(rows);
+                        int randCol = ThreadLocalRandom.current().nextInt(columns);
+                        Space newspace = board.get(randRow).get(randCol);
+                        if (emptySpace(newspace)){
+                            newspace.setOccupant(h);
+                            placed = true;
+                        }
+                    }
+
                 }
                 if (destinationCache != null){
                     Gazoo.addTreasure(destinationCache);
@@ -200,10 +264,13 @@ public class board {
                     destinationSpace.setCache(null);
                 }
 
-            destinationSpace.setOccupant(occupant);
-            space.setOccupant(null);
-            gazooCol = newGazooCol;
-            gazooRow = newGazooRow;
+                if(allowMove){
+                    destinationSpace.setOccupant(occupant);
+                    space.setOccupant(null);
+                    gazooCol = newGazooCol;
+                    gazooRow = newGazooRow;
+                }
+
             return true;
         }
         return false;

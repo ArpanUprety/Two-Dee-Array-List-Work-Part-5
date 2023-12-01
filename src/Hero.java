@@ -10,6 +10,9 @@ public Dice attackDice = new Dice();
         super(name, health, pieceColor);
         attackDice = d;
     }
+
+
+
     @Override
     public int Hurt(LivingThing l) {
 
@@ -17,6 +20,12 @@ public Dice attackDice = new Dice();
         return attackDice.getRollValue();
 
     }
+
+    @Override
+    public void setHealth() {
+
+    }
+
 
 
 }

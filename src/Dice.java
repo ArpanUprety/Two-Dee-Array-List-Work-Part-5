@@ -3,7 +3,7 @@ import java.util.Random;
 
 public class Dice {
 
-     public  static ArrayList <Integer> values = new ArrayList<>();
+     public  ArrayList <Integer> values = new ArrayList<>();
     public static Random roller = new Random();
 
 
@@ -16,7 +16,8 @@ public class Dice {
     }
 
     public Dice(ArrayList<Integer> Integers){
-      values = (Integers);
+       values = (Integers);
+
     }
 
     public Dice() {
